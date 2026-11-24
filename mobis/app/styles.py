@@ -3,6 +3,9 @@ orange warnings, blue information."""
 
 from __future__ import annotations
 
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QColor, QPalette
+
 FONT_FAMILY = "Segoe UI"
 
 #: Strong colours (banners, primary buttons): level -> (foreground, background)
@@ -35,6 +38,56 @@ BORDER = "#D5DBE3"
 TEXT = "#1E2833"
 MUTED = "#5B6776"
 PRIMARY = "#1D4ED8"
+
+
+def light_palette() -> QPalette:
+    """Explicit light palette.
+
+    Without it, Qt follows the Windows light / dark setting: in dark mode every
+    colour not set by the style sheet (e.g. the item text of drop-down lists)
+    becomes white and disappears on the light backgrounds of this theme.
+    """
+    palette = QPalette()
+    colours = {
+        QPalette.ColorRole.Window: BG,
+        QPalette.ColorRole.WindowText: TEXT,
+        QPalette.ColorRole.Base: SURFACE,
+        QPalette.ColorRole.AlternateBase: "#F7F9FC",
+        QPalette.ColorRole.Text: TEXT,
+        QPalette.ColorRole.PlaceholderText: "#8A95A3",
+        QPalette.ColorRole.Button: SURFACE,
+        QPalette.ColorRole.ButtonText: TEXT,
+        QPalette.ColorRole.BrightText: "#FFFFFF",
+        QPalette.ColorRole.Highlight: "#BFDBFE",
+        QPalette.ColorRole.HighlightedText: TEXT,
+        QPalette.ColorRole.ToolTipBase: TEXT,
+        QPalette.ColorRole.ToolTipText: "#FFFFFF",
+        QPalette.ColorRole.Link: PRIMARY,
+        QPalette.ColorRole.LinkVisited: "#1E40AF",
+        QPalette.ColorRole.Light: "#FFFFFF",
+        QPalette.ColorRole.Midlight: "#E3E8EF",
+        QPalette.ColorRole.Mid: "#C3CBD6",
+        QPalette.ColorRole.Dark: "#9AA5B1",
+        QPalette.ColorRole.Shadow: "#6B7280",
+    }
+    if hasattr(QPalette.ColorRole, "Accent"):  # Qt >= 6.6
+        colours[QPalette.ColorRole.Accent] = PRIMARY
+    for role, value in colours.items():
+        palette.setColor(QPalette.ColorGroup.All, role, QColor(value))
+    for role in (QPalette.ColorRole.WindowText, QPalette.ColorRole.Text, QPalette.ColorRole.ButtonText):
+        palette.setColor(QPalette.ColorGroup.Disabled, role, QColor("#9AA5B1"))
+    palette.setColor(QPalette.ColorGroup.Disabled, QPalette.ColorRole.Base, QColor("#F1F3F6"))
+    return palette
+
+
+def apply_theme(app) -> None:
+    """Apply the light industrial theme, independent of the Windows light / dark mode."""
+    hints = app.styleHints()
+    if hasattr(hints, "setColorScheme"):  # Qt >= 6.8: also keeps native title bars light
+        hints.setColorScheme(Qt.ColorScheme.Light)
+    app.setStyle("Fusion")  # predictable style-sheet rendering on every Windows version
+    app.setPalette(light_palette())  # after setStyle(), which resets the palette
+    app.setStyleSheet(stylesheet())
 
 
 def stylesheet() -> str:
@@ -125,8 +178,19 @@ QLineEdit#ScanInput {{ font-size: 22pt; font-weight: 600; padding: 10px 14px; bo
                        border-radius: 6px; background: #FFFFFF; }}
 QLineEdit#ScanInput:focus {{ border: 2px solid #15803D; background: #F7FEF9; }}
 QComboBox#BagTypeCombo {{ font-size: 14pt; padding: 6px 10px; min-height: 34px; }}
-QComboBox QAbstractItemView {{ background: {SURFACE}; selection-background-color: #DBEAFE; selection-color: {TEXT};
-                               border: 1px solid #C3CBD6; }}
+QComboBox {{ combobox-popup: 0; }}
+QComboBox QAbstractItemView {{ background: {SURFACE}; color: {TEXT}; border: 1px solid #C3CBD6; outline: 0;
+                               selection-background-color: #DBEAFE; selection-color: {TEXT}; }}
+QComboBox QAbstractItemView::item {{ min-height: 28px; padding: 0px 8px; color: {TEXT}; }}
+QComboBox QAbstractItemView::item:selected, QComboBox QAbstractItemView::item:hover {{
+    background: #DBEAFE; color: {TEXT}; }}
+QComboBox#BagTypeCombo QAbstractItemView {{ font-size: 13pt; }}
+QComboBox#BagTypeCombo QAbstractItemView::item {{ min-height: 40px; }}
+QMenu {{ background: {SURFACE}; color: {TEXT}; border: 1px solid #C3CBD6; padding: 4px; }}
+QMenu::item {{ padding: 6px 24px 6px 12px; }}
+QMenu::item:selected {{ background: #DBEAFE; color: {TEXT}; }}
+QMenu::item:disabled {{ color: #9AA5B1; }}
+QCalendarWidget QAbstractItemView {{ color: {TEXT}; selection-background-color: #DBEAFE; selection-color: {TEXT}; }}
 QCheckBox {{ spacing: 8px; color: {TEXT}; }}
 QTableView, QTableWidget {{ background: {SURFACE}; alternate-background-color: #F7F9FC; gridline-color: #E3E8EF;
                             border: 1px solid {BORDER}; border-radius: 4px; selection-background-color: #DBEAFE;
@@ -150,5 +214,5 @@ QProgressBar::chunk {{ background: #3B82F6; border-radius: 3px; }}
 QProgressBar[level="warn"]::chunk {{ background: #F97316; }}
 QProgressBar[level="ng"]::chunk {{ background: #DC2626; }}
 QSplitter::handle {{ background: {BORDER}; }}
-QListWidget {{ background: {SURFACE}; border: 1px solid {BORDER}; border-radius: 4px; }}
+QListWidget {{ background: {SURFACE}; color: {TEXT}; border: 1px solid {BORDER}; border-radius: 4px; }}
 """

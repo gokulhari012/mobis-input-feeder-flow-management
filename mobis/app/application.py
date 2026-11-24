@@ -11,7 +11,7 @@ from PySide6.QtCore import QLockFile
 from PySide6.QtWidgets import QApplication, QMessageBox
 
 from mobis import __app_name__, __organization__, __short_name__, __version__
-from mobis.app.styles import stylesheet
+from mobis.app.styles import apply_theme
 from mobis.resources import icon
 from mobis.services.backup_service import BackupService
 from mobis.services.logging_service import set_level, setup_logging
@@ -48,8 +48,8 @@ def run(argv: Optional[list[str]] = None) -> int:
     QApplication.setOrganizationName(__organization__)
     QApplication.setApplicationVersion(__version__)
     app = QApplication(sys.argv)
+    apply_theme(app)  # light theme even when Windows runs in dark mode
     app.setFont(font(10))
-    app.setStyleSheet(stylesheet())
     app.setWindowIcon(icon("app"))
 
     lock = QLockFile(str(paths.data_dir / "mobis.lock"))
